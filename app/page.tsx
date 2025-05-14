@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { AleoWalletProvider } from "./components/wallet-provider"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Dynamically import components that use the Aleo SDK to prevent SSR issues
 const DynamicTransactionForm = dynamic(
@@ -22,23 +23,35 @@ const DynamicTransactionHistory = dynamic(
 )
 
 function HomeContent() {
-  const { publicKey, connected } = useWallet()
+  const { publicKey, connected, connecting, wallet } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
   const [network, setNetwork] = useState("Aleo Testnet")
+  const [walletInfo, setWalletInfo] = useState<string>("")
 
   // Update state when wallet connection changes
   useEffect(() => {
+    console.log("Wallet state:", { publicKey, connected, connecting, wallet: wallet?.adapter.name })
+
     if (connected && publicKey) {
       setIsConnected(true)
       setAccount(publicKey)
+      setWalletInfo(`Connected to ${wallet?.adapter.name || "Unknown Wallet"}`)
     } else {
       setIsConnected(false)
       setAccount("")
+      if (connecting) {
+        setWalletInfo("Connecting to wallet...")
+      } else if (wallet) {
+        setWalletInfo(`Wallet ${wallet.adapter.name} detected but not connected`)
+      } else {
+        setWalletInfo("No wallet detected")
+      }
     }
-  }, [connected, publicKey])
+  }, [connected, connecting, publicKey, wallet])
 
   const handleConnect = async (connected: boolean, address: string) => {
+    console.log("handleConnect called:", { connected, address })
     setIsConnected(connected)
     setAccount(address)
   }
@@ -50,6 +63,12 @@ function HomeContent() {
 
         <div className="card-bg p-4 md:p-8 rounded-lg shadow-lg w-full mx-auto">
           <ConnectButton isConnected={isConnected} onConnect={handleConnect} />
+
+          {walletInfo && (
+            <Alert className="mb-4">
+              <AlertDescription>{walletInfo}</AlertDescription>
+            </Alert>
+          )}
 
           {isConnected && (
             <>

@@ -14,6 +14,7 @@ export function ConnectButton({ isConnected, onConnect }: ConnectButtonProps) {
 
   // Update parent component when wallet connection changes
   useEffect(() => {
+    console.log("Wallet connection state:", { connected, publicKey })
     if (connected && publicKey) {
       onConnect(true, publicKey)
     } else if (!connected) {

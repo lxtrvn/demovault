@@ -66,6 +66,11 @@ export function TransactionForm({ account }: TransactionFormProps) {
     fetchBlockHeight()
   }, [])
 
+  // Get the correct chainId based on network
+  const getChainId = () => {
+    return "testnet3" // Use testnet3 for now to match the wallet provider
+  }
+
   // Create Vault function
   const handleCreateVault = async () => {
     if (!publicKey) {
@@ -88,7 +93,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: network === "mainnet" ? "mainnet" : "testnet",
+        chainId: getChainId(),
         transitions: [
           {
             program: PROGRAM_ID,
@@ -138,7 +143,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: network === "mainnet" ? "mainnet" : "testnet",
+        chainId: getChainId(),
         transitions: [
           {
             program: PROGRAM_ID,
@@ -187,7 +192,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: network === "mainnet" ? "mainnet" : "testnet",
+        chainId: getChainId(),
         transitions: [
           {
             program: PROGRAM_ID,
@@ -229,6 +234,9 @@ export function TransactionForm({ account }: TransactionFormProps) {
                 <SelectItem value="mainnet">Mainnet</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Note: Currently using testnet3 for compatibility with the Leo wallet.
+            </p>
           </div>
         </div>
 
