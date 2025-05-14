@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, RefreshCw } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export function TransactionHistory() {
+function TransactionHistory() {
   // Hardcoded program IDs
   const PROGRAM_ID = "piggybanker10.aleo"
   const CREDITS_PROGRAM = "credits.aleo"
@@ -76,6 +76,7 @@ export function TransactionHistory() {
 
     try {
       if (requestTransactionHistory) {
+        console.log("Requesting transaction history for program:", PROGRAM_ID)
         const history = await requestTransactionHistory(PROGRAM_ID)
         console.log("PiggyBanker transaction history:", history)
         setPiggybankerTransactions(history || [])
@@ -99,6 +100,7 @@ export function TransactionHistory() {
 
     try {
       if (requestTransactionHistory) {
+        console.log("Requesting transaction history for program:", CREDITS_PROGRAM)
         const history = await requestTransactionHistory(CREDITS_PROGRAM)
         console.log("Credits transaction history:", history)
         setCreditsTransactions(history || [])
@@ -215,3 +217,5 @@ export function TransactionHistory() {
     </Card>
   )
 }
+
+export default TransactionHistory

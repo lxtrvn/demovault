@@ -14,7 +14,7 @@ interface AleoWalletProviderProps {
 }
 
 export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) => {
-  // Set up the wallet adapters
+  // Set up the wallet adapters - using only LeoWalletAdapter which is already installed
   const wallets = useMemo(
     () => [
       new LeoWalletAdapter({
@@ -28,7 +28,7 @@ export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) =>
     <WalletProvider
       wallets={wallets}
       decryptPermission={DecryptPermission.UponRequest}
-      network={WalletAdapterNetwork.Testnet3} // Reverting back to Testnet3 which is known to work
+      network={WalletAdapterNetwork.TestnetBeta}
       autoConnect
     >
       <WalletModalProvider>{children}</WalletModalProvider>

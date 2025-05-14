@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
-export function RecordViewer() {
+function RecordViewer() {
   // Hardcoded program ID
   const PROGRAM_ID = "piggybanker10.aleo"
   const CREDITS_PROGRAM = "credits.aleo"
@@ -133,6 +133,7 @@ export function RecordViewer() {
 
     try {
       if (requestRecordPlaintexts) {
+        console.log("Requesting vault records for program:", PROGRAM_ID)
         const records = await requestRecordPlaintexts(PROGRAM_ID)
         console.log("Vault records:", records)
 
@@ -170,6 +171,7 @@ export function RecordViewer() {
 
     try {
       if (requestRecordPlaintexts) {
+        console.log("Requesting credits records for program:", CREDITS_PROGRAM)
         const records = await requestRecordPlaintexts(CREDITS_PROGRAM)
         console.log("Credits records:", records)
 
@@ -373,3 +375,5 @@ export function RecordViewer() {
     </Card>
   )
 }
+
+export default RecordViewer

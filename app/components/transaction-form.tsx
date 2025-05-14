@@ -66,9 +66,18 @@ export function TransactionForm({ account }: TransactionFormProps) {
     fetchBlockHeight()
   }, [])
 
+  // Format inputs correctly with type suffixes
+  const formatU32 = (value: string | number): string => {
+    return `${value}u32`
+  }
+
+  const formatU64 = (value: string | number): string => {
+    return `${value}u64`
+  }
+
   // Get the correct chainId based on network
   const getChainId = () => {
-    return "testnet3" // Use testnet3 for now to match the wallet provider
+    return "testnet3" // Use testnet3 for compatibility with Leo wallet
   }
 
   // Create Vault function
@@ -90,6 +99,17 @@ export function TransactionForm({ account }: TransactionFormProps) {
         throw new Error("Failed to fetch current block height")
       }
 
+      // Format inputs correctly with type suffixes
+      const blockHeightInput = formatU32(blockHeight)
+      const durationInput = formatU32(vaultDuration)
+      const amountInput = formatU64(creditsAmount)
+
+      console.log("Creating vault with inputs:", {
+        blockHeight: blockHeightInput,
+        duration: durationInput,
+        amount: amountInput,
+      })
+
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
@@ -98,7 +118,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
           {
             program: PROGRAM_ID,
             functionName: "createvault",
-            inputs: [`${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
+            inputs: [blockHeightInput, durationInput, amountInput],
           },
         ],
         fee: 80000, // fees in microcredits
@@ -140,6 +160,18 @@ export function TransactionForm({ account }: TransactionFormProps) {
         throw new Error("Failed to fetch current block height")
       }
 
+      // Format inputs correctly with type suffixes
+      const blockHeightInput = formatU32(blockHeight)
+      const durationInput = formatU32(vaultDuration)
+      const amountInput = formatU64(creditsAmount)
+
+      console.log("Creating private vault with inputs:", {
+        record: creditsRecord,
+        blockHeight: blockHeightInput,
+        duration: durationInput,
+        amount: amountInput,
+      })
+
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
@@ -148,7 +180,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
           {
             program: PROGRAM_ID,
             functionName: "rcreatevault",
-            inputs: [creditsRecord, `${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
+            inputs: [creditsRecord, blockHeightInput, durationInput, amountInput],
           },
         ],
         fee: 100000, // fees in microcredits
@@ -189,6 +221,15 @@ export function TransactionForm({ account }: TransactionFormProps) {
     setTransactionId(null)
 
     try {
+      // Format amount input correctly with type suffix
+      const amountInput = formatU64(creditsAmount)
+
+      console.log("Withdrawing with inputs:", {
+        record: vaultRecord,
+        recipient: receivingAddress,
+        amount: amountInput,
+      })
+
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
@@ -197,7 +238,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
           {
             program: PROGRAM_ID,
             functionName: "withdraw",
-            inputs: [vaultRecord, receivingAddress, `${creditsAmount}u64`],
+            inputs: [vaultRecord, receivingAddress, amountInput],
           },
         ],
         fee: 100000, // fees in microcredits
@@ -493,3 +534,5 @@ export function TransactionForm({ account }: TransactionFormProps) {
     </Card>
   )
 }
+
+export default TransactionForm
