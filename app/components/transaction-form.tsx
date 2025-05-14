@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface TransactionFormProps {
   account: string
@@ -25,12 +26,14 @@ export function TransactionForm({ account }: TransactionFormProps) {
   const [creditsAmount, setCreditsAmount] = useState("")
   const [receivingAddress, setReceivingAddress] = useState("")
   const [vaultRecord, setVaultRecord] = useState("")
+  const [creditsRecord, setCreditsRecord] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
   const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null)
   const [isLoadingBlockHeight, setIsLoadingBlockHeight] = useState(false)
+  const [network, setNetwork] = useState("testnet") // Default to testnet
 
   // Function to fetch the current block height
   const fetchBlockHeight = async () => {
@@ -85,7 +88,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: "testnetbeta",
+        chainId: network === "mainnet" ? "mainnet" : "testnet",
         transitions: [
           {
             program: PROGRAM_ID,
@@ -115,7 +118,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       return
     }
 
-    if (!vaultRecord) {
+    if (!creditsRecord) {
       setError("No credits record selected. Please select a record first.")
       return
     }
@@ -135,12 +138,12 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: "testnetbeta",
+        chainId: network === "mainnet" ? "mainnet" : "testnet",
         transitions: [
           {
             program: PROGRAM_ID,
             functionName: "rcreatevault",
-            inputs: [vaultRecord, `${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
+            inputs: [creditsRecord, `${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
           },
         ],
         fee: 100000, // fees in microcredits
@@ -184,7 +187,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const result = await requestTransaction({
         address: publicKey,
-        chainId: "testnetbeta",
+        chainId: network === "mainnet" ? "mainnet" : "testnet",
         transitions: [
           {
             program: PROGRAM_ID,
@@ -208,12 +211,27 @@ export function TransactionForm({ account }: TransactionFormProps) {
   }
 
   return (
-    <Card>
+    <Card className="card-bg">
       <CardHeader>
         <CardTitle>PiggyBanker Operations</CardTitle>
         <CardDescription>Create and manage vaults in the {PROGRAM_ID} program</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="space-y-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="network">Network</Label>
+            <Select value={network} onValueChange={setNetwork}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select network" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="testnet">Testnet</SelectItem>
+                <SelectItem value="mainnet">Mainnet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <Tabs defaultValue="createVault" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="createVault">Create Vault</TabsTrigger>
@@ -296,12 +314,12 @@ export function TransactionForm({ account }: TransactionFormProps) {
               </Alert>
 
               <div className="space-y-2">
-                <Label htmlFor="vaultRecord">Credits Record</Label>
+                <Label htmlFor="creditsRecord">Credits Record</Label>
                 <Input
-                  id="vaultRecord"
-                  placeholder="Select a record from the Records tab"
-                  value={vaultRecord}
-                  onChange={(e) => setVaultRecord(e.target.value)}
+                  id="creditsRecord"
+                  placeholder="Select a credits.aleo record from the Records tab"
+                  value={creditsRecord}
+                  onChange={(e) => setCreditsRecord(e.target.value)}
                   required
                   className="font-mono text-xs"
                 />
@@ -350,7 +368,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
                 disabled={
                   isSubmitting ||
                   !publicKey ||
-                  !vaultRecord ||
+                  !creditsRecord ||
                   !vaultDuration ||
                   !creditsAmount ||
                   currentBlockHeight === null
@@ -382,7 +400,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
                 <Label htmlFor="vaultRecord">Vault Record</Label>
                 <Input
                   id="vaultRecord"
-                  placeholder="Select a record from the Records tab"
+                  placeholder="Select a vault record from the Records tab"
                   value={vaultRecord}
                   onChange={(e) => setVaultRecord(e.target.value)}
                   required

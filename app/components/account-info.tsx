@@ -18,12 +18,10 @@ export function AccountInfo({ account, network }: AccountInfoProps) {
     // Map network ID to network name
     const getNetworkName = () => {
       switch (network) {
-        case WalletAdapterNetwork.Testnet3:
-          return "Aleo Testnet 3"
-        case WalletAdapterNetwork.Testnet2:
-          return "Aleo Testnet 2"
-        case WalletAdapterNetwork.Localnet:
-          return "Aleo Localnet"
+        case WalletAdapterNetwork.Testnet:
+          return "Aleo Testnet"
+        case WalletAdapterNetwork.Mainnet:
+          return "Aleo Mainnet"
         default:
           return network || "Unknown Network"
       }
@@ -39,7 +37,7 @@ export function AccountInfo({ account, network }: AccountInfoProps) {
   }
 
   return (
-    <Card className="mt-4">
+    <Card className="mt-4 card-bg">
       <CardContent className="pt-6">
         <div className="space-y-2">
           <div className="flex justify-between">
