@@ -77,7 +77,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
 
   // Get the correct chainId based on network
   const getChainId = () => {
-    return "testnet3" // Use testnet3 for compatibility with Leo wallet
+    return "testnet" // Use testnet as specified by the user
   }
 
   // Create Vault function
@@ -275,9 +275,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
                 <SelectItem value="mainnet">Mainnet</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              Note: Currently using testnet3 for compatibility with the Leo wallet.
-            </p>
+            <p className="text-xs text-muted-foreground">Note: Using Aleo Testnet network.</p>
           </div>
         </div>
 
