@@ -1,121 +1,207 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletAdapterNetwork } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { initializeAleo, parseLeoInputs } from "../utils/aleo"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface TransactionFormProps {
   account: string
 }
 
 export function TransactionForm({ account }: TransactionFormProps) {
+  // Hardcoded program ID
+  const PROGRAM_ID = "piggybanker10.aleo"
+
   const { publicKey, requestTransaction } = useWallet()
 
-  const [programId, setProgramId] = useState("")
-  const [functionName, setFunctionName] = useState("")
-  const [inputs, setInputs] = useState("")
-  const [fee, setFee] = useState("0.01")
-  const [network, setNetwork] = useState("testnet3")
-
+  // Form states
+  const [vaultDuration, setVaultDuration] = useState("")
+  const [creditsAmount, setCreditsAmount] = useState("")
+  const [receivingAddress, setReceivingAddress] = useState("")
+  const [vaultRecord, setVaultRecord] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null)
+  const [isLoadingBlockHeight, setIsLoadingBlockHeight] = useState(false)
 
-  // Initialize Aleo SDK
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const initialized = await initializeAleo()
-        setIsInitialized(initialized)
-        if (!initialized) {
-          setError("Failed to initialize Aleo SDK. Please refresh the page.")
-        }
-      } catch (error) {
-        console.error("Error initializing Aleo SDK:", error)
-        setError("Failed to initialize Aleo SDK. Please refresh the page.")
+  // Function to fetch the current block height
+  const fetchBlockHeight = async () => {
+    setIsLoadingBlockHeight(true)
+    setError(null)
+
+    try {
+      const url = "https://api.explorer.provable.com/v1/testnet/latest/height"
+      const response = await fetch(url, { method: "GET", headers: { Accept: "application/json" } })
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`)
       }
-    }
 
-    init()
-  }, [])
-
-  // Get network enum based on selected network
-  const getNetworkEnum = () => {
-    switch (network) {
-      case "testnet3":
-        return WalletAdapterNetwork.Testnet3
-      case "testnet2":
-        return WalletAdapterNetwork.Testnet2
-      case "local":
-        return WalletAdapterNetwork.Localnet
-      default:
-        return WalletAdapterNetwork.Testnet3
+      const data = await response.json()
+      setCurrentBlockHeight(data)
+      console.log("Current block height:", data)
+      return data
+    } catch (error: any) {
+      console.error("Failed to fetch block height:", error)
+      setError(`Error fetching block height: ${error.message}`)
+      return null
+    } finally {
+      setIsLoadingBlockHeight(false)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Fetch block height on component mount
+  useEffect(() => {
+    fetchBlockHeight()
+  }, [])
+
+  // Create Vault function
+  const handleCreateVault = async () => {
+    if (!publicKey) {
+      setError("Wallet not connected. Please connect your wallet.")
+      return
+    }
+
     setIsSubmitting(true)
     setResult(null)
     setError(null)
     setTransactionId(null)
 
-    if (!isInitialized) {
-      setError("Aleo SDK is not initialized. Please refresh the page.")
-      setIsSubmitting(false)
-      return
-    }
-
-    if (!publicKey) {
-      setError("Wallet not connected. Please connect your wallet.")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
-      // Parse inputs
-      const parsedInputs = parseLeoInputs(inputs)
-
-      // Convert fee to microcredits (1 credit = 1,000,000 microcredits)
-      const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
-
-      // Create transaction
-      const aleoTransaction = Transaction.createTransaction(
-        publicKey,
-        getNetworkEnum(),
-        programId,
-        functionName,
-        parsedInputs,
-        feeInMicrocredits,
-      )
-
-      if (requestTransaction) {
-        // Request transaction using wallet adapter
-        const txId = await requestTransaction(aleoTransaction)
-        setTransactionId(txId)
-        setResult(`Program executed successfully. Transaction ID: ${txId}`)
-      } else {
-        throw new Error("Wallet does not support transactions")
+      // Fetch latest block height
+      const blockHeight = await fetchBlockHeight()
+      if (!blockHeight) {
+        throw new Error("Failed to fetch current block height")
       }
 
-      // Reset form fields except network
-      setProgramId("")
-      setFunctionName("")
-      setInputs("")
+      // Create transaction
+      const result = await requestTransaction({
+        address: publicKey,
+        chainId: "testnetbeta",
+        transitions: [
+          {
+            program: PROGRAM_ID,
+            functionName: "createvault",
+            inputs: [`${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
+          },
+        ],
+        fee: 80000, // fees in microcredits
+        feePrivate: false,
+      })
+
+      setTransactionId(result)
+      setResult(`Vault created successfully. Transaction ID: ${result}`)
+      console.log("Transaction result:", result)
     } catch (error: any) {
-      console.error("Error executing Leo program:", error)
-      setError(`Error: ${error.message || "Failed to execute program"}`)
+      console.error("Error creating vault:", error)
+      setError(`Error: ${error.message || "Failed to create vault"}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Create Private Vault function
+  const handleCreatePrivateVault = async () => {
+    if (!publicKey) {
+      setError("Wallet not connected. Please connect your wallet.")
+      return
+    }
+
+    if (!vaultRecord) {
+      setError("No credits record selected. Please select a record first.")
+      return
+    }
+
+    setIsSubmitting(true)
+    setResult(null)
+    setError(null)
+    setTransactionId(null)
+
+    try {
+      // Fetch latest block height
+      const blockHeight = await fetchBlockHeight()
+      if (!blockHeight) {
+        throw new Error("Failed to fetch current block height")
+      }
+
+      // Create transaction
+      const result = await requestTransaction({
+        address: publicKey,
+        chainId: "testnetbeta",
+        transitions: [
+          {
+            program: PROGRAM_ID,
+            functionName: "rcreatevault",
+            inputs: [vaultRecord, `${blockHeight}u32`, `${vaultDuration}u32`, `${creditsAmount}u64`],
+          },
+        ],
+        fee: 100000, // fees in microcredits
+        feePrivate: false,
+      })
+
+      setTransactionId(result)
+      setResult(`Private vault created successfully. Transaction ID: ${result}`)
+      console.log("Transaction result:", result)
+    } catch (error: any) {
+      console.error("Error creating private vault:", error)
+      setError(`Error: ${error.message || "Failed to create private vault"}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Withdraw function
+  const handleWithdraw = async () => {
+    if (!publicKey) {
+      setError("Wallet not connected. Please connect your wallet.")
+      return
+    }
+
+    if (!vaultRecord) {
+      setError("No vault record selected. Please select a record first.")
+      return
+    }
+
+    if (!receivingAddress) {
+      setError("No receiving address provided. Please enter a receiving address.")
+      return
+    }
+
+    setIsSubmitting(true)
+    setResult(null)
+    setError(null)
+    setTransactionId(null)
+
+    try {
+      // Create transaction
+      const result = await requestTransaction({
+        address: publicKey,
+        chainId: "testnetbeta",
+        transitions: [
+          {
+            program: PROGRAM_ID,
+            functionName: "withdraw",
+            inputs: [vaultRecord, receivingAddress, `${creditsAmount}u64`],
+          },
+        ],
+        fee: 100000, // fees in microcredits
+        feePrivate: false,
+      })
+
+      setTransactionId(result)
+      setResult(`Withdrawal successful. Transaction ID: ${result}`)
+      console.log("Transaction result:", result)
+    } catch (error: any) {
+      console.error("Error withdrawing:", error)
+      setError(`Error: ${error.message || "Failed to withdraw"}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -124,94 +210,227 @@ export function TransactionForm({ account }: TransactionFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Execute Leo Program</CardTitle>
-        <CardDescription>Enter your Leo program details to execute on the Aleo blockchain</CardDescription>
+        <CardTitle>PiggyBanker Operations</CardTitle>
+        <CardDescription>Create and manage vaults in the {PROGRAM_ID} program</CardDescription>
       </CardHeader>
       <CardContent>
-        {!isInitialized && (
-          <Alert className="mb-4" variant="destructive">
-            <AlertTitle>Initialization Error</AlertTitle>
-            <AlertDescription>Failed to initialize Aleo SDK. Please refresh the page.</AlertDescription>
-          </Alert>
-        )}
+        <Tabs defaultValue="createVault" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="createVault">Create Vault</TabsTrigger>
+            <TabsTrigger value="createPrivate">Create Private</TabsTrigger>
+            <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+          </TabsList>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="network">Network</Label>
-            <Select value={network} onValueChange={setNetwork}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="testnet3">Testnet 3 (Main Testnet)</SelectItem>
-                <SelectItem value="testnet2">Testnet 2</SelectItem>
-                <SelectItem value="local">Local Network</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Create Vault Tab */}
+          <TabsContent value="createVault" className="space-y-4">
+            <div className="space-y-4 mt-4">
+              <Alert className="bg-muted">
+                <AlertDescription>
+                  Creates a new vault with the specified duration and amount. Block height will be fetched
+                  automatically.
+                </AlertDescription>
+              </Alert>
 
-          <div className="space-y-2">
-            <Label htmlFor="programId">Program ID</Label>
-            <Input
-              id="programId"
-              placeholder="credits.aleo"
-              value={programId}
-              onChange={(e) => setProgramId(e.target.value)}
-              required
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="vaultDuration">Vault Duration (hours)</Label>
+                <Input
+                  id="vaultDuration"
+                  type="number"
+                  min="1"
+                  placeholder="Enter duration in hours"
+                  value={vaultDuration}
+                  onChange={(e) => setVaultDuration(e.target.value)}
+                  required
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="functionName">Function Name</Label>
-            <Input
-              id="functionName"
-              placeholder="transfer"
-              value={functionName}
-              onChange={(e) => setFunctionName(e.target.value)}
-              required
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="creditsAmount">Credits Amount</Label>
+                <Input
+                  id="creditsAmount"
+                  type="number"
+                  min="1"
+                  placeholder="Amount of credits"
+                  value={creditsAmount}
+                  onChange={(e) => setCreditsAmount(e.target.value)}
+                  required
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="inputs">Function Inputs (comma separated)</Label>
-            <Input
-              id="inputs"
-              placeholder='aleo1abc..., 1000u64, "message"'
-              value={inputs}
-              onChange={(e) => setInputs(e.target.value)}
-              required
-            />
-          </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Current Block Height</Label>
+                  <Button variant="outline" size="sm" onClick={fetchBlockHeight} disabled={isLoadingBlockHeight}>
+                    {isLoadingBlockHeight ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
+                  </Button>
+                </div>
+                <div className="p-2 bg-muted rounded-md text-sm font-mono">
+                  {currentBlockHeight !== null ? `${currentBlockHeight}` : "Loading..."}
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fee">Fee (in credits)</Label>
-            <Input
-              id="fee"
-              type="number"
-              step="0.001"
-              min="0.001"
-              placeholder="0.01"
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
-              required
-            />
-          </div>
+              <Button
+                onClick={handleCreateVault}
+                disabled={isSubmitting || !publicKey || !vaultDuration || !creditsAmount || currentBlockHeight === null}
+                className="w-full"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Vault...
+                  </>
+                ) : (
+                  "Create Vault"
+                )}
+              </Button>
+            </div>
+          </TabsContent>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting || !isInitialized || !publicKey || !programId || !functionName}
-            className="w-full"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Executing...
-              </>
-            ) : (
-              "Execute Program"
-            )}
-          </Button>
-        </form>
+          {/* Create Private Vault Tab */}
+          <TabsContent value="createPrivate" className="space-y-4">
+            <div className="space-y-4 mt-4">
+              <Alert className="bg-muted">
+                <AlertDescription>
+                  Creates a private vault using a credits record. Select a record from the Records tab first.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="vaultRecord">Credits Record</Label>
+                <Input
+                  id="vaultRecord"
+                  placeholder="Select a record from the Records tab"
+                  value={vaultRecord}
+                  onChange={(e) => setVaultRecord(e.target.value)}
+                  required
+                  className="font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="vaultDuration">Vault Duration (hours)</Label>
+                <Input
+                  id="vaultDuration"
+                  type="number"
+                  min="1"
+                  placeholder="Enter duration in hours"
+                  value={vaultDuration}
+                  onChange={(e) => setVaultDuration(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="creditsAmount">Credits Amount</Label>
+                <Input
+                  id="creditsAmount"
+                  type="number"
+                  min="1"
+                  placeholder="Amount of credits"
+                  value={creditsAmount}
+                  onChange={(e) => setCreditsAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Current Block Height</Label>
+                  <Button variant="outline" size="sm" onClick={fetchBlockHeight} disabled={isLoadingBlockHeight}>
+                    {isLoadingBlockHeight ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
+                  </Button>
+                </div>
+                <div className="p-2 bg-muted rounded-md text-sm font-mono">
+                  {currentBlockHeight !== null ? `${currentBlockHeight}` : "Loading..."}
+                </div>
+              </div>
+
+              <Button
+                onClick={handleCreatePrivateVault}
+                disabled={
+                  isSubmitting ||
+                  !publicKey ||
+                  !vaultRecord ||
+                  !vaultDuration ||
+                  !creditsAmount ||
+                  currentBlockHeight === null
+                }
+                className="w-full"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Private Vault...
+                  </>
+                ) : (
+                  "Create Private Vault"
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* Withdraw Tab */}
+          <TabsContent value="withdraw" className="space-y-4">
+            <div className="space-y-4 mt-4">
+              <Alert className="bg-muted">
+                <AlertDescription>
+                  Withdraw credits from a vault. Select a vault record from the Records tab first.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="vaultRecord">Vault Record</Label>
+                <Input
+                  id="vaultRecord"
+                  placeholder="Select a record from the Records tab"
+                  value={vaultRecord}
+                  onChange={(e) => setVaultRecord(e.target.value)}
+                  required
+                  className="font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="receivingAddress">Receiving Address</Label>
+                <Input
+                  id="receivingAddress"
+                  placeholder="aleo1..."
+                  value={receivingAddress}
+                  onChange={(e) => setReceivingAddress(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="creditsAmount">Credits Amount</Label>
+                <Input
+                  id="creditsAmount"
+                  type="number"
+                  min="1"
+                  placeholder="Amount of credits"
+                  value={creditsAmount}
+                  onChange={(e) => setCreditsAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                onClick={handleWithdraw}
+                disabled={isSubmitting || !publicKey || !vaultRecord || !receivingAddress || !creditsAmount}
+                className="w-full"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Withdrawing...
+                  </>
+                ) : (
+                  "Withdraw"
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {error && (
           <Alert className="mt-4" variant="destructive">

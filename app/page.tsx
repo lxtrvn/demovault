@@ -49,7 +49,7 @@ function HomeContent() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24">
       <div className="z-10 w-full max-w-4xl items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-8 text-center">React Leo Web3 App</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">PiggyBanker Web App</h1>
 
         <div className="bg-white/10 p-4 md:p-8 rounded-lg shadow-lg w-full mx-auto">
           <ConnectButton isConnected={isConnected} onConnect={handleConnect} />
@@ -60,20 +60,16 @@ function HomeContent() {
 
               <div className="mt-8">
                 <Tabs defaultValue="execute" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="execute">Execute Program</TabsTrigger>
-                    <TabsTrigger value="records">View Records</TabsTrigger>
-                    <TabsTrigger value="transfer">Transfer</TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="execute">PiggyBanker Operations</TabsTrigger>
+                    <TabsTrigger value="records">Records</TabsTrigger>
+                    <TabsTrigger value="history">Transaction History</TabsTrigger>
                   </TabsList>
                   <TabsContent value="execute" className="mt-4">
                     <DynamicTransactionForm account={account} />
                   </TabsContent>
                   <TabsContent value="records" className="mt-4">
                     <DynamicRecordViewer />
-                  </TabsContent>
-                  <TabsContent value="transfer" className="mt-4">
-                    <DynamicRecordTransfer />
                   </TabsContent>
                   <TabsContent value="history" className="mt-4">
                     <DynamicTransactionHistory />
@@ -85,7 +81,7 @@ function HomeContent() {
 
           {!isConnected && (
             <div className="text-center py-12 text-muted-foreground">
-              Connect your wallet to interact with Leo programs on Aleo
+              Connect your wallet to interact with the PiggyBanker program on Aleo
             </div>
           )}
         </div>
