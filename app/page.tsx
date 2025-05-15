@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { AleoWalletProvider } from "./components/wallet-provider"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
+import { WalletAdapterNetwork } from "@demox-labs/aleo-wallet-adapter-base"
 
 // Dynamically import components that use the Aleo SDK to prevent SSR issues
 const DynamicTransactionForm = dynamic(
@@ -28,7 +29,7 @@ function HomeContent() {
   const { publicKey, connected } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
-  const [network, setNetwork] = useState("Aleo Mainnet")
+  const [network, setNetwork] = useState(WalletAdapterNetwork.Testnet)
 
   // Update state when wallet connection changes
   useEffect(() => {

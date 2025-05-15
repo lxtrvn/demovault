@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useVaultRecords } from "../hooks/use-piggybanker-records"
+import { RecordSelector } from "./record-selector"
 
 export function RecordTransfer() {
   const { publicKey, requestTransaction } = useWallet()
@@ -23,7 +23,14 @@ export function RecordTransfer() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [selectedRecord, setSelectedRecord] = useState<string | null>(null)
+  const [selectedRecord, setSelectedRecord] = useState<string>("")
+
+  // Fetch records when component mounts
+  useEffect(() => {
+    if (publicKey && !recordsLoading && records.length === 0) {
+      fetchRecords().catch(console.error)
+    }
+  }, [publicKey, recordsLoading, records.length, fetchRecords])
 
   const handleTransfer = async () => {
     if (!publicKey) throw new WalletNotConnectedError()
@@ -41,10 +48,10 @@ export function RecordTransfer() {
       const amountInMicrocredits = `${Math.floor(Number.parseFloat(amount) * 1_000_000)}u64`
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
 
-      // Create transaction
+      // Create transaction as per documentation
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        "mainnet",
+        WalletAdapterNetwork.Testnet,
         PROGRAM_ID,
         "transfer",
         [selectedRecord, recipient, amountInMicrocredits],
@@ -80,36 +87,15 @@ export function RecordTransfer() {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Records</Label>
-              <Button
-                onClick={() => fetchRecords()}
-                disabled={recordsLoading || !publicKey}
-                variant="outline"
-                size="sm"
-              >
-                {recordsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh Records"}
-              </Button>
-            </div>
-
-            {records.length > 0 ? (
-              <Select value={selectedRecord || ""} onValueChange={setSelectedRecord}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a record" />
-                </SelectTrigger>
-                <SelectContent>
-                  {records.map((record, index) => (
-                    <SelectItem key={index} value={record}>
-                      Record {index + 1}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-center p-2 bg-muted rounded-md text-sm">
-                {recordsLoading ? "Loading records..." : "No records found. Click Refresh Records to load."}
-              </div>
-            )}
+            <Label>Select Record</Label>
+            <RecordSelector
+              value={selectedRecord}
+              onChange={setSelectedRecord}
+              records={records}
+              loading={recordsLoading}
+              onRefresh={fetchRecords}
+              placeholder="Select a record to transfer from"
+            />
           </div>
 
           <div className="space-y-2">

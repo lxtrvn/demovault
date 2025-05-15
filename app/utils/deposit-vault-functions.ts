@@ -6,6 +6,7 @@ export interface DepositVaultFunction {
     type: string
     description: string
     placeholder: string
+    isRecord?: boolean
   }[]
 }
 
@@ -31,6 +32,7 @@ export const DEPOSIT_VAULT_FUNCTIONS: Record<string, DepositVaultFunction> = {
         type: "record",
         description: "Vault record to withdraw from",
         placeholder: "record1...",
+        isRecord: true,
       },
       {
         name: "amount",
@@ -49,6 +51,7 @@ export const DEPOSIT_VAULT_FUNCTIONS: Record<string, DepositVaultFunction> = {
         type: "record",
         description: "Vault record to transfer from",
         placeholder: "record1...",
+        isRecord: true,
       },
       {
         name: "recipient",

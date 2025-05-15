@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { initializeAleo } from "../utils/aleo"
 import { DEPOSIT_VAULT_FUNCTIONS, DEPOSIT_VAULT_FUNCTION_NAMES } from "../utils/deposit-vault-functions"
 import { useVaultRecords } from "../hooks/use-piggybanker-records"
+import { RecordSelector } from "./record-selector"
 
 interface TransactionFormProps {
   account: string
@@ -21,7 +22,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ account }: TransactionFormProps) {
   const { publicKey, requestTransaction } = useWallet()
-  const { records, fetchRecords } = useVaultRecords()
+  const { records, fetchRecords, loading: recordsLoading } = useVaultRecords()
 
   const PROGRAM_ID = "depositvault.aleo"
   const [functionName, setFunctionName] = useState("")
@@ -64,8 +65,18 @@ export function TransactionForm({ account }: TransactionFormProps) {
     }
   }, [functionName, selectedFunction])
 
+  // Fetch records when component mounts
+  useEffect(() => {
+    if (publicKey && !recordsLoading && records.length === 0) {
+      fetchRecords().catch(console.error)
+    }
+  }, [publicKey, recordsLoading, records.length, fetchRecords])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!publicKey) throw new WalletNotConnectedError()
+
     setIsSubmitting(true)
     setResult(null)
     setError(null)
@@ -77,12 +88,6 @@ export function TransactionForm({ account }: TransactionFormProps) {
       return
     }
 
-    if (!publicKey) {
-      setError("Wallet not connected. Please connect your wallet.")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
       // Filter out empty inputs
       const validInputs = inputs.filter((input) => input.trim() !== "")
@@ -90,10 +95,10 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Convert fee to microcredits (1 credit = 1,000,000 microcredits)
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
 
-      // Create transaction
+      // Create transaction as per documentation
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        "mainnet",
+        WalletAdapterNetwork.Testnet,
         PROGRAM_ID,
         functionName,
         validInputs,
@@ -174,13 +179,25 @@ export function TransactionForm({ account }: TransactionFormProps) {
                   {input.name} ({input.type})
                   <span className="ml-2 text-xs text-muted-foreground">{input.description}</span>
                 </Label>
-                <Input
-                  id={`input-${index}`}
-                  placeholder={input.placeholder}
-                  value={inputs[index] || ""}
-                  onChange={(e) => handleInputChange(index, e.target.value)}
-                  required
-                />
+
+                {input.isRecord ? (
+                  <RecordSelector
+                    value={inputs[index] || ""}
+                    onChange={(value) => handleInputChange(index, value)}
+                    records={records}
+                    loading={recordsLoading}
+                    onRefresh={fetchRecords}
+                    placeholder={input.placeholder}
+                  />
+                ) : (
+                  <Input
+                    id={`input-${index}`}
+                    placeholder={input.placeholder}
+                    value={inputs[index] || ""}
+                    onChange={(e) => handleInputChange(index, e.target.value)}
+                    required
+                  />
+                )}
               </div>
             ))}
 
