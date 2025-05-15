@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -48,10 +48,10 @@ export function RecordTransfer() {
       const amountInMicrocredits = `${Math.floor(Number.parseFloat(amount) * 1_000_000)}u64`
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
 
-      // Create transaction as per documentation
+      // Create transaction with string network value
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        WalletAdapterNetwork.Testnet,
+        "testnet", // Use string value instead of enum
         PROGRAM_ID,
         "transfer",
         [selectedRecord, recipient, amountInMicrocredits],

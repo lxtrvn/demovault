@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 import { ConnectButton } from "./components/connect-button"
 import { AccountInfo } from "./components/account-info"
+import { WalletDebug } from "./components/wallet-debug"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { AleoWalletProvider } from "./components/wallet-provider"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { WalletAdapterNetwork } from "@demox-labs/aleo-wallet-adapter-base"
 
 // Dynamically import components that use the Aleo SDK to prevent SSR issues
 const DynamicTransactionForm = dynamic(
@@ -29,7 +29,8 @@ function HomeContent() {
   const { publicKey, connected } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
-  const [network, setNetwork] = useState(WalletAdapterNetwork.Testnet)
+  const [network, setNetwork] = useState("testnet")
+  const [showDebug, setShowDebug] = useState(false)
 
   // Update state when wallet connection changes
   useEffect(() => {
@@ -54,6 +55,15 @@ function HomeContent() {
 
         <div className="bg-white/10 p-4 md:p-8 rounded-lg shadow-lg w-full mx-auto">
           <ConnectButton isConnected={isConnected} onConnect={handleConnect} />
+
+          {/* Debug toggle */}
+          <div className="mt-2 text-center">
+            <button onClick={() => setShowDebug(!showDebug)} className="text-xs text-muted-foreground underline">
+              {showDebug ? "Hide Debug Info" : "Show Debug Info"}
+            </button>
+          </div>
+
+          {showDebug && <WalletDebug />}
 
           {isConnected && (
             <>

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletAdapterNetwork, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -95,10 +95,10 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Convert fee to microcredits (1 credit = 1,000,000 microcredits)
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
 
-      // Create transaction as per documentation
+      // Create transaction with string network value
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        WalletAdapterNetwork.Testnet,
+        "testnet", // Use string value instead of enum
         PROGRAM_ID,
         functionName,
         validInputs,
