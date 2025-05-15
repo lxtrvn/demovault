@@ -24,6 +24,12 @@ const DynamicTransactionHistory = dynamic(
   { ssr: false },
 )
 
+// Update the imports to include the EnhancedRecordViewer
+const DynamicEnhancedRecordViewer = dynamic(
+  () => import("./components/enhanced-record-viewer").then((mod) => mod.EnhancedRecordViewer),
+  { ssr: false },
+)
+
 function HomeContent() {
   const { publicKey, connected } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
@@ -60,9 +66,11 @@ function HomeContent() {
 
               <div className="mt-8">
                 <Tabs defaultValue="execute" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  {/* Update the TabsList to include a new tab for the enhanced record viewer */}
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="execute">Execute Program</TabsTrigger>
                     <TabsTrigger value="records">View Records</TabsTrigger>
+                    <TabsTrigger value="enhanced">Enhanced Records</TabsTrigger>
                     <TabsTrigger value="transfer">Transfer</TabsTrigger>
                     <TabsTrigger value="history">History</TabsTrigger>
                   </TabsList>
@@ -71,6 +79,10 @@ function HomeContent() {
                   </TabsContent>
                   <TabsContent value="records" className="mt-4">
                     <DynamicRecordViewer />
+                  </TabsContent>
+                  {/* Add a new TabsContent for the enhanced record viewer */}
+                  <TabsContent value="enhanced" className="mt-4">
+                    <DynamicEnhancedRecordViewer />
                   </TabsContent>
                   <TabsContent value="transfer" className="mt-4">
                     <DynamicRecordTransfer />
