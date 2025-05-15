@@ -95,10 +95,10 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Convert fee to microcredits (1 credit = 1,000,000 microcredits)
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
 
-      // Create transaction with string network value
+      // Create transaction
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        "testnet", // Use string value instead of enum
+        "testnet",
         PROGRAM_ID,
         functionName,
         validInputs,

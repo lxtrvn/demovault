@@ -25,14 +25,7 @@ export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) =>
   )
 
   return (
-    <WalletProvider
-      wallets={wallets}
-      // Use UponRequest instead of AutoDecrypt which might be causing permission issues
-      decryptPermission={DecryptPermission.UponRequest}
-      // Use string value for network to avoid potential enum mismatches
-      network="testnet"
-      autoConnect
-    >
+    <WalletProvider wallets={wallets} decryptPermission={DecryptPermission.UponRequest} network="testnet" autoConnect>
       <WalletModalProvider>{children}</WalletModalProvider>
     </WalletProvider>
   )

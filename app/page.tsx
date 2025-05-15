@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 import { ConnectButton } from "./components/connect-button"
 import { AccountInfo } from "./components/account-info"
-import { WalletDebug } from "./components/wallet-debug"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { AleoWalletProvider } from "./components/wallet-provider"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
+import { WalletDebug } from "./components/wallet-debug"
 
 // Dynamically import components that use the Aleo SDK to prevent SSR issues
 const DynamicTransactionForm = dynamic(
