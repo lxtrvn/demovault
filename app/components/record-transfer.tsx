@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function RecordTransfer() {
   const { publicKey, requestTransaction, requestRecords } = useWallet()
 
+  const PROGRAM_ID = "piggybanker7.aleo"
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
   const [fee, setFee] = useState("0.01")
@@ -47,7 +48,7 @@ export function RecordTransfer() {
 
     try {
       if (requestRecords) {
-        const fetchedRecords = await requestRecords("credits.aleo")
+        const fetchedRecords = await requestRecords(PROGRAM_ID)
         console.log("Records:", fetchedRecords)
         setRecords(fetchedRecords || [])
 
@@ -86,7 +87,7 @@ export function RecordTransfer() {
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
         getNetworkEnum(),
-        "credits.aleo",
+        PROGRAM_ID,
         "transfer",
         [selectedRecord, recipient, amountInMicrocredits],
         feeInMicrocredits,
@@ -110,8 +111,8 @@ export function RecordTransfer() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Record Transfer</CardTitle>
-        <CardDescription>Transfer Aleo credits to another address</CardDescription>
+        <CardTitle>PiggyBanker Transfer</CardTitle>
+        <CardDescription>Transfer PiggyBanker tokens to another address</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -155,7 +156,7 @@ export function RecordTransfer() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (in credits)</Label>
+            <Label htmlFor="amount">Amount</Label>
             <Input
               id="amount"
               type="number"

@@ -5,14 +5,12 @@ import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
 import { WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 
 export function TransactionHistory() {
   const { publicKey, requestTransactionHistory } = useWallet()
-  const [program, setProgram] = useState("credits.aleo")
+  const PROGRAM_ID = "piggybanker7.aleo"
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +23,7 @@ export function TransactionHistory() {
 
     try {
       if (requestTransactionHistory) {
-        const history = await requestTransactionHistory(program)
+        const history = await requestTransactionHistory(PROGRAM_ID)
         console.log("Transaction history:", history)
         setTransactions(history || [])
       } else {
@@ -43,21 +41,11 @@ export function TransactionHistory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
-        <CardDescription>View your transaction history</CardDescription>
+        <CardTitle>PiggyBanker Transaction History</CardTitle>
+        <CardDescription>View your PiggyBanker transaction history</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="program">Program ID</Label>
-            <Input
-              id="program"
-              placeholder="credits.aleo"
-              value={program}
-              onChange={(e) => setProgram(e.target.value)}
-            />
-          </div>
-
           <Button onClick={fetchTransactionHistory} disabled={isLoading || !publicKey} className="w-full">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Fetch Transaction History

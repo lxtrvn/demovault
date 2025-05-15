@@ -20,7 +20,7 @@ interface TransactionFormProps {
 export function TransactionForm({ account }: TransactionFormProps) {
   const { publicKey, requestTransaction } = useWallet()
 
-  const [programId, setProgramId] = useState("")
+  const PROGRAM_ID = "piggybanker7.aleo"
   const [functionName, setFunctionName] = useState("")
   const [inputs, setInputs] = useState("")
   const [fee, setFee] = useState("0.01")
@@ -94,7 +94,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
         getNetworkEnum(),
-        programId,
+        PROGRAM_ID,
         functionName,
         parsedInputs,
         feeInMicrocredits,
@@ -110,7 +110,6 @@ export function TransactionForm({ account }: TransactionFormProps) {
       }
 
       // Reset form fields except network
-      setProgramId("")
       setFunctionName("")
       setInputs("")
     } catch (error: any) {
@@ -124,8 +123,8 @@ export function TransactionForm({ account }: TransactionFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Execute Leo Program</CardTitle>
-        <CardDescription>Enter your Leo program details to execute on the Aleo blockchain</CardDescription>
+        <CardTitle>Execute PiggyBanker Program</CardTitle>
+        <CardDescription>Execute functions on the PiggyBanker7 program</CardDescription>
       </CardHeader>
       <CardContent>
         {!isInitialized && (
@@ -152,20 +151,14 @@ export function TransactionForm({ account }: TransactionFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="programId">Program ID</Label>
-            <Input
-              id="programId"
-              placeholder="credits.aleo"
-              value={programId}
-              onChange={(e) => setProgramId(e.target.value)}
-              required
-            />
+            <Input id="programId" value={PROGRAM_ID} disabled className="bg-muted" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="functionName">Function Name</Label>
             <Input
               id="functionName"
-              placeholder="transfer"
+              placeholder="deposit"
               value={functionName}
               onChange={(e) => setFunctionName(e.target.value)}
               required
@@ -199,7 +192,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
 
           <Button
             type="submit"
-            disabled={isSubmitting || !isInitialized || !publicKey || !programId || !functionName}
+            disabled={isSubmitting || !isInitialized || !publicKey || !functionName}
             className="w-full"
           >
             {isSubmitting ? (

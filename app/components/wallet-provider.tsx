@@ -18,7 +18,7 @@ export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) =>
   const wallets = useMemo(
     () => [
       new LeoWalletAdapter({
-        appName: "React Leo Web3 App",
+        appName: "PiggyBanker App",
       }),
     ],
     [],
@@ -27,7 +27,7 @@ export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) =>
   return (
     <WalletProvider
       wallets={wallets}
-      decryptPermission={DecryptPermission.UponRequest}
+      decryptPermission={DecryptPermission.AutoDecrypt}
       network={WalletAdapterNetwork.Testnet3}
       autoConnect
     >

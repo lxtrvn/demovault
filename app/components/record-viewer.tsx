@@ -5,14 +5,12 @@ import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
 import { WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 
 export function RecordViewer() {
   const { publicKey, requestRecords, requestRecordPlaintexts } = useWallet()
-  const [program, setProgram] = useState("credits.aleo")
+  const PROGRAM_ID = "piggybanker7.aleo"
   const [records, setRecords] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +23,7 @@ export function RecordViewer() {
 
     try {
       if (requestRecords) {
-        const fetchedRecords = await requestRecords(program)
+        const fetchedRecords = await requestRecords(PROGRAM_ID)
         console.log("Records:", fetchedRecords)
         setRecords(fetchedRecords || [])
       } else {
@@ -48,7 +46,7 @@ export function RecordViewer() {
 
     try {
       if (requestRecordPlaintexts) {
-        const fetchedRecords = await requestRecordPlaintexts(program)
+        const fetchedRecords = await requestRecordPlaintexts(PROGRAM_ID)
         console.log("Record plaintexts:", fetchedRecords)
         setRecords(fetchedRecords || [])
       } else {
@@ -66,21 +64,11 @@ export function RecordViewer() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Record Viewer</CardTitle>
-        <CardDescription>View and decrypt Aleo records</CardDescription>
+        <CardTitle>PiggyBanker Records</CardTitle>
+        <CardDescription>View and decrypt your PiggyBanker records</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="program">Program ID</Label>
-            <Input
-              id="program"
-              placeholder="credits.aleo"
-              value={program}
-              onChange={(e) => setProgram(e.target.value)}
-            />
-          </div>
-
           <div className="flex space-x-2">
             <Button onClick={fetchRecords} disabled={isLoading || !publicKey}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
