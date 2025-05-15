@@ -28,7 +28,7 @@ function HomeContent() {
   const { publicKey, connected } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
-  const [network, setNetwork] = useState("Aleo Testnet 3")
+  const [network, setNetwork] = useState("Aleo Mainnet")
 
   // Update state when wallet connection changes
   useEffect(() => {
@@ -49,7 +49,7 @@ function HomeContent() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24">
       <div className="z-10 w-full max-w-4xl items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-8 text-center">PiggyBanker7 App</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">DepositVault App</h1>
 
         <div className="bg-white/10 p-4 md:p-8 rounded-lg shadow-lg w-full mx-auto">
           <ConnectButton isConnected={isConnected} onConnect={handleConnect} />
@@ -85,7 +85,7 @@ function HomeContent() {
 
           {!isConnected && (
             <div className="text-center py-12 text-muted-foreground">
-              Connect your wallet to interact with the PiggyBanker7 program on Aleo
+              Connect your wallet to interact with the DepositVault program on Aleo
             </div>
           )}
         </div>

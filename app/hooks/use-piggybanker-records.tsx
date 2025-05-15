@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
 import { WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 
-export function usePiggyBankerRecords() {
+export function useVaultRecords() {
   const { publicKey, requestRecords, requestRecordPlaintexts } = useWallet()
-  const PROGRAM_ID = "piggybanker7.aleo"
+  const PROGRAM_ID = "depositvault.aleo"
 
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState<boolean>(false)
@@ -21,14 +21,14 @@ export function usePiggyBankerRecords() {
     try {
       if (requestRecords) {
         const fetchedRecords = await requestRecords(PROGRAM_ID)
-        console.log("PiggyBanker Records:", fetchedRecords)
+        console.log("DepositVault Records:", fetchedRecords)
         setRecords(fetchedRecords || [])
         return fetchedRecords
       } else {
         throw new Error("Wallet does not support record fetching")
       }
     } catch (error: any) {
-      console.error("Failed to fetch PiggyBanker records:", error)
+      console.error("Failed to fetch DepositVault records:", error)
       setError(`Error: ${error.message || "Failed to fetch records"}`)
       setRecords([])
       return []
@@ -46,14 +46,14 @@ export function usePiggyBankerRecords() {
     try {
       if (requestRecordPlaintexts) {
         const fetchedRecords = await requestRecordPlaintexts(PROGRAM_ID)
-        console.log("PiggyBanker Record plaintexts:", fetchedRecords)
+        console.log("DepositVault Record plaintexts:", fetchedRecords)
         setRecords(fetchedRecords || [])
         return fetchedRecords
       } else {
         throw new Error("Wallet does not support record plaintext fetching")
       }
     } catch (error: any) {
-      console.error("Failed to fetch PiggyBanker record plaintexts:", error)
+      console.error("Failed to fetch DepositVault record plaintexts:", error)
       setError(`Error: ${error.message || "Failed to fetch record plaintexts"}`)
       setRecords([])
       return []

@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react"
 
 export function TransactionHistory() {
   const { publicKey, requestTransactionHistory } = useWallet()
-  const PROGRAM_ID = "piggybanker7.aleo"
+  const PROGRAM_ID = "depositvault.aleo"
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,8 +41,8 @@ export function TransactionHistory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>PiggyBanker Transaction History</CardTitle>
-        <CardDescription>View your PiggyBanker transaction history</CardDescription>
+        <CardTitle>DepositVault Transaction History</CardTitle>
+        <CardDescription>View your DepositVault transaction history</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

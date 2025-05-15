@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, RefreshCw } from "lucide-react"
-import { usePiggyBankerRecords } from "../hooks/use-piggybanker-records"
+import { useVaultRecords } from "../hooks/use-piggybanker-records"
 import { Badge } from "@/components/ui/badge"
 
 export function RecordViewer() {
-  const { records, loading, error, fetchRecords, fetchRecordPlaintexts } = usePiggyBankerRecords()
+  const { records, loading, error, fetchRecords, fetchRecordPlaintexts } = useVaultRecords()
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null)
 
   // Format record for display
@@ -46,10 +46,10 @@ export function RecordViewer() {
     <Card>
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>PiggyBanker Records</span>
+          <span>DepositVault Records</span>
           <Badge variant={loading ? "outline" : "default"}>{records.length} Records</Badge>
         </CardTitle>
-        <CardDescription>View and decrypt your PiggyBanker records</CardDescription>
+        <CardDescription>View and decrypt your DepositVault records</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletAdapterNetwork } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,8 +12,8 @@ import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { initializeAleo } from "../utils/aleo"
-import { PIGGYBANKER_FUNCTIONS, PIGGYBANKER_FUNCTION_NAMES } from "../utils/piggybanker-functions"
-import { usePiggyBankerRecords } from "../hooks/use-piggybanker-records"
+import { DEPOSIT_VAULT_FUNCTIONS, DEPOSIT_VAULT_FUNCTION_NAMES } from "../utils/deposit-vault-functions"
+import { useVaultRecords } from "../hooks/use-piggybanker-records"
 
 interface TransactionFormProps {
   account: string
@@ -21,13 +21,12 @@ interface TransactionFormProps {
 
 export function TransactionForm({ account }: TransactionFormProps) {
   const { publicKey, requestTransaction } = useWallet()
-  const { records, fetchRecords } = usePiggyBankerRecords()
+  const { records, fetchRecords } = useVaultRecords()
 
-  const PROGRAM_ID = "piggybanker7.aleo"
+  const PROGRAM_ID = "depositvault.aleo"
   const [functionName, setFunctionName] = useState("")
   const [inputs, setInputs] = useState<string[]>(Array(3).fill(""))
   const [fee, setFee] = useState("0.01")
-  const [network, setNetwork] = useState("testnet3")
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -36,7 +35,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
   const [transactionId, setTransactionId] = useState<string | null>(null)
 
   // Get the selected function definition
-  const selectedFunction = functionName ? PIGGYBANKER_FUNCTIONS[functionName] : null
+  const selectedFunction = functionName ? DEPOSIT_VAULT_FUNCTIONS[functionName] : null
 
   // Initialize Aleo SDK
   useEffect(() => {
@@ -64,20 +63,6 @@ export function TransactionForm({ account }: TransactionFormProps) {
       setInputs([])
     }
   }, [functionName, selectedFunction])
-
-  // Get network enum based on selected network
-  const getNetworkEnum = () => {
-    switch (network) {
-      case "testnet3":
-        return WalletAdapterNetwork.Testnet3
-      case "testnet2":
-        return WalletAdapterNetwork.Testnet2
-      case "local":
-        return WalletAdapterNetwork.Localnet
-      default:
-        return WalletAdapterNetwork.Testnet3
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,7 +93,7 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        getNetworkEnum(),
+        "mainnet",
         PROGRAM_ID,
         functionName,
         validInputs,
@@ -149,8 +134,8 @@ export function TransactionForm({ account }: TransactionFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Execute PiggyBanker Program</CardTitle>
-        <CardDescription>Execute functions on the PiggyBanker7 program</CardDescription>
+        <CardTitle>Execute DepositVault Program</CardTitle>
+        <CardDescription>Execute functions on the depositvault.aleo program</CardDescription>
       </CardHeader>
       <CardContent>
         {!isInitialized && (
@@ -161,20 +146,6 @@ export function TransactionForm({ account }: TransactionFormProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="network">Network</Label>
-            <Select value={network} onValueChange={setNetwork}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="testnet3">Testnet 3 (Main Testnet)</SelectItem>
-                <SelectItem value="testnet2">Testnet 2</SelectItem>
-                <SelectItem value="local">Local Network</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="programId">Program ID</Label>
             <Input id="programId" value={PROGRAM_ID} disabled className="bg-muted" />
@@ -187,9 +158,9 @@ export function TransactionForm({ account }: TransactionFormProps) {
                 <SelectValue placeholder="Select function" />
               </SelectTrigger>
               <SelectContent>
-                {PIGGYBANKER_FUNCTION_NAMES.map((name) => (
+                {DEPOSIT_VAULT_FUNCTION_NAMES.map((name) => (
                   <SelectItem key={name} value={name}>
-                    {name} - {PIGGYBANKER_FUNCTIONS[name].description}
+                    {name} - {DEPOSIT_VAULT_FUNCTIONS[name].description}
                   </SelectItem>
                 ))}
               </SelectContent>
