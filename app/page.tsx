@@ -23,15 +23,25 @@ const DynamicTransactionHistory = dynamic(
 )
 
 function HomeContent() {
-  const { publicKey, connected, connecting, wallet } = useWallet()
+  const { publicKey, connected, connecting, wallet, wallets, select } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
   const [network, setNetwork] = useState("Aleo Testnet")
   const [walletInfo, setWalletInfo] = useState<string>("")
+  const [walletState, setWalletState] = useState<any>({})
 
   // Update state when wallet connection changes
   useEffect(() => {
-    console.log("Wallet state:", { publicKey, connected, connecting, wallet: wallet?.adapter.name })
+    const state = {
+      publicKey,
+      connected,
+      connecting,
+      walletName: wallet?.adapter.name,
+      availableWallets: wallets.map((w) => w.adapter.name).join(", "),
+    }
+
+    console.log("Wallet state:", state)
+    setWalletState(state)
 
     if (connected && publicKey) {
       setIsConnected(true)
@@ -44,11 +54,13 @@ function HomeContent() {
         setWalletInfo("Connecting to wallet...")
       } else if (wallet) {
         setWalletInfo(`Wallet ${wallet.adapter.name} detected but not connected`)
+      } else if (wallets.length > 0) {
+        setWalletInfo(`Available wallets: ${wallets.map((w) => w.adapter.name).join(", ")}`)
       } else {
         setWalletInfo("No wallet detected")
       }
     }
-  }, [connected, connecting, publicKey, wallet])
+  }, [connected, connecting, publicKey, wallet, wallets])
 
   const handleConnect = async (connected: boolean, address: string) => {
     console.log("handleConnect called:", { connected, address })
@@ -69,6 +81,14 @@ function HomeContent() {
               <AlertDescription>{walletInfo}</AlertDescription>
             </Alert>
           )}
+
+          {/* Debug information */}
+          <div className="mb-4 p-3 bg-muted rounded-md text-xs">
+            <details>
+              <summary className="cursor-pointer font-semibold">Wallet Debug Info</summary>
+              <pre className="mt-2 whitespace-pre-wrap">{JSON.stringify(walletState, null, 2)}</pre>
+            </details>
+          </div>
 
           {isConnected && (
             <>
