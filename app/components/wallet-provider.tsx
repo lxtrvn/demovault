@@ -14,11 +14,11 @@ interface AleoWalletProviderProps {
 }
 
 export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) => {
-  // Set up the wallet adapters
+  // Set up the wallet adapters - using only LeoWalletAdapter which is already installed
   const wallets = useMemo(
     () => [
       new LeoWalletAdapter({
-        appName: "PiggyBanker App",
+        appName: "PiggyBanker Web App",
       }),
     ],
     [],
@@ -27,8 +27,8 @@ export const AleoWalletProvider: FC<AleoWalletProviderProps> = ({ children }) =>
   return (
     <WalletProvider
       wallets={wallets}
-      decryptPermission={DecryptPermission.AutoDecrypt}
-      network={WalletAdapterNetwork.Testnet3}
+      decryptPermission={DecryptPermission.UponRequest}
+      network={WalletAdapterNetwork.Testnet}
       autoConnect
     >
       <WalletModalProvider>{children}</WalletModalProvider>
