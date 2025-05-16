@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
-import { Transaction, WalletAdapterNetwork } from "@demox-labs/aleo-wallet-adapter-base"
+import { Transaction, WalletNotConnectedError } from "@demox-labs/aleo-wallet-adapter-base"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { initializeAleo, parseLeoInputs } from "../utils/aleo"
+import { initializeAleo } from "../utils/aleo"
+import { PIGGYBANKER_FUNCTIONS, PIGGYBANKER_FUNCTION_NAMES } from "../utils/piggybanker-functions"
+import { useVaultRecords } from "../hooks/use-piggybanker-records"
+import { RecordSelector } from "./record-selector"
 
 interface TransactionFormProps {
   account: string
@@ -19,18 +22,21 @@ interface TransactionFormProps {
 
 export function TransactionForm({ account }: TransactionFormProps) {
   const { publicKey, requestTransaction } = useWallet()
+  const { records, fetchRecords, loading: recordsLoading } = useVaultRecords()
 
-  const PROGRAM_ID = "piggybanker7.aleo"
+  const PROGRAM_ID = "piggybanker11.aleo"
   const [functionName, setFunctionName] = useState("")
-  const [inputs, setInputs] = useState("")
+  const [inputs, setInputs] = useState<string[]>(Array(3).fill(""))
   const [fee, setFee] = useState("0.01")
-  const [network, setNetwork] = useState("testnet3")
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
+
+  // Get the selected function definition
+  const selectedFunction = functionName ? PIGGYBANKER_FUNCTIONS[functionName] : null
 
   // Initialize Aleo SDK
   useEffect(() => {
@@ -50,22 +56,27 @@ export function TransactionForm({ account }: TransactionFormProps) {
     init()
   }, [])
 
-  // Get network enum based on selected network
-  const getNetworkEnum = () => {
-    switch (network) {
-      case "testnet3":
-        return WalletAdapterNetwork.Testnet3
-      case "testnet2":
-        return WalletAdapterNetwork.Testnet2
-      case "local":
-        return WalletAdapterNetwork.Localnet
-      default:
-        return WalletAdapterNetwork.Testnet3
+  // Reset inputs when function changes
+  useEffect(() => {
+    if (selectedFunction) {
+      setInputs(Array(selectedFunction.inputs.length).fill(""))
+    } else {
+      setInputs([])
     }
-  }
+  }, [functionName, selectedFunction])
+
+  // Fetch records when component mounts
+  useEffect(() => {
+    if (publicKey && !recordsLoading && records.length === 0) {
+      fetchRecords().catch(console.error)
+    }
+  }, [publicKey, recordsLoading, records.length, fetchRecords])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!publicKey) throw new WalletNotConnectedError()
+
     setIsSubmitting(true)
     setResult(null)
     setError(null)
@@ -77,15 +88,9 @@ export function TransactionForm({ account }: TransactionFormProps) {
       return
     }
 
-    if (!publicKey) {
-      setError("Wallet not connected. Please connect your wallet.")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
-      // Parse inputs
-      const parsedInputs = parseLeoInputs(inputs)
+      // Filter out empty inputs
+      const validInputs = inputs.filter((input) => input.trim() !== "")
 
       // Convert fee to microcredits (1 credit = 1,000,000 microcredits)
       const feeInMicrocredits = Math.floor(Number.parseFloat(fee) * 1_000_000)
@@ -93,10 +98,10 @@ export function TransactionForm({ account }: TransactionFormProps) {
       // Create transaction
       const aleoTransaction = Transaction.createTransaction(
         publicKey,
-        getNetworkEnum(),
+        "testnet",
         PROGRAM_ID,
         functionName,
-        parsedInputs,
+        validInputs,
         feeInMicrocredits,
       )
 
@@ -105,13 +110,18 @@ export function TransactionForm({ account }: TransactionFormProps) {
         const txId = await requestTransaction(aleoTransaction)
         setTransactionId(txId)
         setResult(`Program executed successfully. Transaction ID: ${txId}`)
+
+        // Refresh records after a short delay
+        setTimeout(() => {
+          fetchRecords().catch(console.error)
+        }, 2000)
       } else {
         throw new Error("Wallet does not support transactions")
       }
 
       // Reset form fields except network
       setFunctionName("")
-      setInputs("")
+      setInputs(Array(3).fill(""))
     } catch (error: any) {
       console.error("Error executing Leo program:", error)
       setError(`Error: ${error.message || "Failed to execute program"}`)
@@ -120,11 +130,17 @@ export function TransactionForm({ account }: TransactionFormProps) {
     }
   }
 
+  const handleInputChange = (index: number, value: string) => {
+    const newInputs = [...inputs]
+    newInputs[index] = value
+    setInputs(newInputs)
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Execute PiggyBanker Program</CardTitle>
-        <CardDescription>Execute functions on the PiggyBanker7 program</CardDescription>
+        <CardDescription>Execute functions on the piggybanker11.aleo program</CardDescription>
       </CardHeader>
       <CardContent>
         {!isInitialized && (
@@ -136,45 +152,54 @@ export function TransactionForm({ account }: TransactionFormProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="network">Network</Label>
-            <Select value={network} onValueChange={setNetwork}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="testnet3">Testnet 3 (Main Testnet)</SelectItem>
-                <SelectItem value="testnet2">Testnet 2</SelectItem>
-                <SelectItem value="local">Local Network</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="programId">Program ID</Label>
             <Input id="programId" value={PROGRAM_ID} disabled className="bg-muted" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="functionName">Function Name</Label>
-            <Input
-              id="functionName"
-              placeholder="deposit"
-              value={functionName}
-              onChange={(e) => setFunctionName(e.target.value)}
-              required
-            />
+            <Label htmlFor="functionName">Function</Label>
+            <Select value={functionName} onValueChange={setFunctionName}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select function" />
+              </SelectTrigger>
+              <SelectContent>
+                {PIGGYBANKER_FUNCTION_NAMES.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name} - {PIGGYBANKER_FUNCTIONS[name].description}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="inputs">Function Inputs (comma separated)</Label>
-            <Input
-              id="inputs"
-              placeholder='aleo1abc..., 1000u64, "message"'
-              value={inputs}
-              onChange={(e) => setInputs(e.target.value)}
-              required
-            />
-          </div>
+          {selectedFunction &&
+            selectedFunction.inputs.map((input, index) => (
+              <div key={index} className="space-y-2">
+                <Label htmlFor={`input-${index}`}>
+                  {input.name} ({input.type})
+                  <span className="ml-2 text-xs text-muted-foreground">{input.description}</span>
+                </Label>
+
+                {input.isRecord ? (
+                  <RecordSelector
+                    value={inputs[index] || ""}
+                    onChange={(value) => handleInputChange(index, value)}
+                    records={records}
+                    loading={recordsLoading}
+                    onRefresh={fetchRecords}
+                    placeholder={input.placeholder}
+                  />
+                ) : (
+                  <Input
+                    id={`input-${index}`}
+                    placeholder={input.placeholder}
+                    value={inputs[index] || ""}
+                    onChange={(e) => handleInputChange(index, e.target.value)}
+                    required
+                  />
+                )}
+              </div>
+            ))}
 
           <div className="space-y-2">
             <Label htmlFor="fee">Fee (in credits)</Label>

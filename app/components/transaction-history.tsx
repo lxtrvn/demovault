@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react"
 
 export function TransactionHistory() {
   const { publicKey, requestTransactionHistory } = useWallet()
-  const PROGRAM_ID = "piggybanker7.aleo"
+  const PROGRAM_ID = "piggybanker11.aleo"
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

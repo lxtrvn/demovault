@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { AleoWalletProvider } from "./components/wallet-provider"
 import { useWallet } from "@demox-labs/aleo-wallet-adapter-react"
+import { WalletDebug } from "./components/wallet-debug"
 
 // Dynamically import components that use the Aleo SDK to prevent SSR issues
 const DynamicTransactionForm = dynamic(
@@ -28,7 +29,8 @@ function HomeContent() {
   const { publicKey, connected } = useWallet()
   const [isConnected, setIsConnected] = useState(false)
   const [account, setAccount] = useState("")
-  const [network, setNetwork] = useState("Aleo Testnet 3")
+  const [network, setNetwork] = useState("testnet")
+  const [showDebug, setShowDebug] = useState(false)
 
   // Update state when wallet connection changes
   useEffect(() => {
@@ -49,10 +51,19 @@ function HomeContent() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-6 md:p-24">
       <div className="z-10 w-full max-w-4xl items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-8 text-center">PiggyBanker7 App</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">PiggyBanker App</h1>
 
         <div className="bg-white/10 p-4 md:p-8 rounded-lg shadow-lg w-full mx-auto">
           <ConnectButton isConnected={isConnected} onConnect={handleConnect} />
+
+          {/* Debug toggle */}
+          <div className="mt-2 text-center">
+            <button onClick={() => setShowDebug(!showDebug)} className="text-xs text-muted-foreground underline">
+              {showDebug ? "Hide Debug Info" : "Show Debug Info"}
+            </button>
+          </div>
+
+          {showDebug && <WalletDebug />}
 
           {isConnected && (
             <>
@@ -85,7 +96,7 @@ function HomeContent() {
 
           {!isConnected && (
             <div className="text-center py-12 text-muted-foreground">
-              Connect your wallet to interact with the PiggyBanker7 program on Aleo
+              Connect your wallet to interact with the PiggyBanker program on Aleo
             </div>
           )}
         </div>
